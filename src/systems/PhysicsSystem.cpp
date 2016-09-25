@@ -20,20 +20,22 @@ void PhysicsSystem::update(float delta){
         e.velocity += e.acceleration;
         e.transform->position += e.velocity * delta;
 
+        e.rotationVelocity = e.rotationAcceleration;
+        e.transform->rotation += e.rotationVelocity * delta;
+
         for(auto& s : pools->staticBodies){
             vec2 overlap = getOverlap(e, s);
-            std::cout << overlap.x << " : " << overlap.y << std::endl;
             
             if(overlap != vec2(0)){
-
-                e.transform->position -= overlap;
-                e.velocity = vec2(0);
-                e.acceleration = vec2(0);
+                vec2 perp = glm::cross(vec3(normalize(overlap),0),vec3(0,0,1));
+                
+                e.transform->position += overlap;
+                e.velocity = perp * dot(perp, e.velocity) * e.friction;
+                e.acceleration = perp * dot(perp, e.acceleration) * e.friction;
 
             }
 
         }
-        std::cout << endl << endl;
     }
 
 }
@@ -44,64 +46,81 @@ vec2 PhysicsSystem::getOverlap(DynamicBody d, StaticBody s){
 
         Quad a = getBoxVerticesInWorld(Utility::getTransform(d.transform));
         Quad b = getBoxVerticesInWorld(Utility::getTransform(s.transform));
-       
-        vec2 ax1 = normalize(a.b - a.a);
-        float d1 = getDistanceBetweenQuadOnAxis(ax1, a, b);
+        
+        vec2 ax1 = normalize(a.v[1] - a.v[0]);
+        vec2 ax2 = normalize(a.v[2] - a.v[1]);
+        vec2 ax3 = normalize(b.v[1] - b.v[0]);
+        vec2 ax4 = normalize(b.v[2] - b.v[1]);
 
-        vec2 ax2 = normalize(a.d - a.a);
-        float d2 = getDistanceBetweenQuadOnAxis(ax2, a, b);
+        float d1 = getDistanceOnProjectedAxis(ax1, a.v, 4, b.v, 4);
+        float d2 = getDistanceOnProjectedAxis(ax2, a.v, 4, b.v, 4);
+        float d3 = -9999;
+        float d4 = -9999;
 
-        if(d1 < 0 && d2 < 0){
+        if(ax3 != ax1 && ax3 != ax2)
+            d3 = getDistanceOnProjectedAxis(ax3, a.v, 4, b.v, 4);
+        if(ax4 != ax1 && ax4 != ax2)
+            d4 = getDistanceOnProjectedAxis(ax4, a.v, 4, b.v, 4);
+
+        if(d1 < 0 && d2 < 0 && d3 < 0 && d4 < 0){
             //collision
-            
-            std::cout << std::printf("distances 1: %f 2: %f",d1,d2) << endl;
+
             vec2 delta = normalize(d.transform->position - s.transform->position);
 
-            float dot1 = dot(ax1, delta);
-            float dot2 = dot(ax2, delta);
-            std::cout << std::printf("dot1 %f dot2 %f",dot1,dot2) << endl;
-            
+            d1 = -d1;
+            d2 = -d2;
+            d3 = -d3;
+            d4 = -d4;
 
-
-            if(dot1 < 0)
-                d1 = -d1;
-            if(dot2 < 0)
-                d2 = -d2;
-
-            if(abs(d1) < abs(d2))
-                return ax1 * d1;
+            //return the smallest overlap (dot(delta, ax?) is used to ensure the offset will be in the right direction)
+            if(d1 < d2 && d1 < d3 && d1 < d4)
+                return dot(delta, ax1) * ax1 * d1;
+            else if(d2 < d1 && d2 < d3 && d2 < d4)
+                return dot(delta, ax2) * ax2 * d2;
+            else if(d3 < d1 && d3 < d2 && d3 < d4)
+                return dot(delta, ax3) * ax3 * d3;
             else
-                return ax2 * d2;
+                return dot(delta, ax4) * ax4 * d4;
 
         }
-    }else{
+    }else if(d.shape == Shape::Circle){
+        Quad a = getBoxVerticesInWorld(Utility::getTransform(s.transform));
+        vec2 circlePos = d.transform->position;
+
+        vec2 ax1 = normalize(a.v[1] - a.v[0]);
+        vec2 ax2 = normalize(a.v[2] - a.v[1]);
+  
+        vec2 cPoints1[] =
+        {
+            circlePos + ax1 * d.transform->scale.x,
+            circlePos - ax1 * d.transform->scale.x
+        };
+
+        vec2 cPoints2[] =
+        {
+            circlePos + ax2 * d.transform->scale.x,
+            circlePos - ax2 * d.transform->scale.x
+        };
+
+        float d1 = getDistanceOnProjectedAxis(ax1, a.v, 4, cPoints1, 2);
+        float d2 = getDistanceOnProjectedAxis(ax2, a.v, 4, cPoints2, 2);
+ 
+        if(d1 < 0 && d2 < 0){
+
+            vec2 delta = normalize(d.transform->position - s.transform->position);
+            
+            d1 = -d1;
+            d2 = -d2;
+
+            if(d1 < d2)
+                return dot(delta, ax1) * ax1 * d1;
+            else
+                return dot(delta, ax2) * ax2 * d2;
+        }
 
     }
 
     return vec2(0);
-}
-
-
-Edge PhysicsSystem::getEdgeFromBox(mat4 worldTransform, int index){
-
-    Edge result;
-
-    vec4 vertices[] =
-    {
-        vec4(-1,-1,0,1),
-        vec4(1,-1,0,1),
-        vec4(1,1,0,1),
-        vec4(-1,1,0,1),
-    };
-
-    result.from = vec2(worldTransform * vertices[index]);
-    result.to   = vec2(worldTransform * vertices[(index + 1) % 4]);
-
-    vec2 n = normalize(result.to - result.from);
-    result.normal = vec2(-n.y, n.x);
-
-    return result;
-
 }
 
 Quad PhysicsSystem::getBoxVerticesInWorld(mat4 worldTransform){
@@ -115,69 +134,51 @@ Quad PhysicsSystem::getBoxVerticesInWorld(mat4 worldTransform){
     };
 
     Quad quad;
-    quad.a = vec2(worldTransform * vertices[0]);
-    quad.b = vec2(worldTransform * vertices[1]);
-    quad.c = vec2(worldTransform * vertices[2]);
-    quad.d = vec2(worldTransform * vertices[3]);
+    for(int i = 0; i < 4; i++)
+        quad.v[i] = vec2(worldTransform * vertices[i]);
 
     return quad;
 }
 
 
-float PhysicsSystem::getDistanceBetweenQuadOnAxis(vec2 ax, Quad a, Quad b){
+float PhysicsSystem::getDistanceOnProjectedAxis(vec2 ax, vec2 a[], int a_length, vec2 b[], int b_length){
+    //project points on axis
+    float proj_a[a_length], proj_b[b_length];
 
-        std::cout << std::printf("axis = (%f, %f)", ax.x, ax.y) << std::endl;
+    for(int i = 0; i < a_length;i++)
+        proj_a[i] = dot(ax, a[i]);
+    for(int i = 0; i < b_length; i++)
+        proj_b[i] = dot(ax, b[i]);
 
+    //find min max for a & b
+    float min_a = proj_a[0], max_a = proj_a[0];
+    float min_b = proj_b[0], max_b = proj_b[0];
 
-        float projected[] =
-        {
-            dot(ax, a.a),
-            dot(ax, a.b),
-            dot(ax, a.c),
-            dot(ax, a.d),
+    for(int i = 1; i < a_length; i++){
+        if(min_a > proj_a[i])
+            min_a = proj_a[i];
+        if(max_a < proj_a[i])
+            max_a = proj_a[i];
+    }
 
-            dot(ax, b.a),
-            dot(ax, b.b),
-            dot(ax, b.c),
-            dot(ax, b.d),
-        };
-        std::cout << std::printf("dots= %f %f %f %f - %f %f %f %f",  projected[0], projected[1], projected[2], projected[3], projected[4], projected[5], projected[6],projected[7]) << std::endl;
+    for(int i = 1; i < b_length; i++){
+        if(min_b > proj_b[i])
+            min_b = proj_b[i];
+        if(max_b < proj_b[i])
+            max_b = proj_b[i];
+    }
 
-        float minmax_a[] =
-        {
-            glm::min(
-                glm::min(projected[0], projected[1]),
-                glm::min(projected[2], projected[3])
-            ),
-            glm::max(
-                glm::max(projected[0], projected[1]),
-                glm::max(projected[2], projected[3])
-            ),
-        };
+    //calc length for a & b on the projected axis
+    float projLength_a = max_a - min_a;
+    float projLength_b = max_b - min_b;
 
-        float minmax_b[] =
-        {
-            glm::min(
-                glm::min(projected[4], projected[5]),
-                glm::min(projected[6], projected[7])
-            ),
-            glm::max(
-                glm::max(projected[4], projected[5]),
-                glm::max(projected[6], projected[7])
-            ),
-        };
+    //calc length between extremes for a & b
+    float totalLength1 = glm::max(abs(min_a - max_b), projLength_a);
+    float totalLength2 = glm::max(abs(max_a - min_b), projLength_b);
 
-        std::cout << std::printf("min = %f max = %f - min = %f max = %f",  minmax_a[0], minmax_a[1], minmax_b[0], minmax_b[1]) << std::endl;
+    //max length
+    float maxLength = glm::max(totalLength1, totalLength2);
 
-        float la = minmax_a[1] - minmax_a[0];
-        float lb = minmax_b[1] - minmax_b[0];
-
-        float total1 = glm::max(abs(minmax_a[0] - minmax_b[1]), la);
-        float total2 = glm::max(abs(minmax_a[1] - minmax_b[0]), lb);
-        std::cout << std::printf("total1 %f total2 %f", total1, total2) << std::endl;
-
-        float total = glm::max(total1, total2);
-        std::cout << std::printf("total %f la %f lb %f", total, la, lb) << std::endl;
-
-        return total - (la + lb);
+    //return the distance(will be negative if overlapping)
+    return maxLength - (projLength_a + projLength_b);
 }

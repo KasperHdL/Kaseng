@@ -20,7 +20,7 @@ class Factory{
 
         void createPlayer(vec2 position);
         void createEnemy(vec2 position, vec4 color);
-        void createWall(vec2 position, vec2 scale);
+        void createWall(vec2 position, vec2 scale, float rotation = 0);
 
 
     private:

@@ -9,8 +9,8 @@ class Utility{
         static mat4 getTransform(Transform* transform){
 
             mat4 t = translate(mat4(1), vec3(transform->position, 0));
-            //TODO add rotation
-            mat4 s = scale(t, vec3(transform->scale, 0.1f));
+            mat4 r = glm::rotate(t, transform->rotation, vec3(0,0,1));
+            mat4 s = scale(r, vec3(transform->scale, 0.1f));
 
             return s;
         }

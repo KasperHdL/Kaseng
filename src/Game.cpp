@@ -20,14 +20,14 @@ void Game::init(){
     physicsSystem.start(&pools, vec2(0,-0.1));
     renderSystem.start(&pools, vec4(0.15,0.1,0.05,1));
 
-    factory.createPlayer(vec2(100,100));
-
+/*
     for(int i = 0; i < 20;i ++){
         float r = ((float)i / 20);
         factory.createEnemy(vec2(r * _screenWidth, 200), vec4(r, r, r, 1));
     }
+    */
 
-    factory.createWall(vec2(_screenWidth / 2, 10), vec2(_screenWidth / 2, 10));
+    test_collision();
 }
 
 void Game::start(){
@@ -37,12 +37,8 @@ void Game::start(){
 
 
     float renderCount = 0;
-    float physicsCount = 0;
-    float updateCount = 0;
 
     float renderRate = 1/60;
-    float physicsRate = 1/240;
-    float updateRate = 1/120;
 
     while(_gameRunning){
         tLast = tNow;
@@ -51,8 +47,6 @@ void Game::start(){
         delta = clamp<float>((tNow - tLast) / (float) SDL_GetPerformanceFrequency(), 0, 1);
 
         renderCount += delta;
-        physicsCount += delta;
-        updateCount += delta;
 
         //debug quit
         SDL_Event event;
@@ -71,10 +65,7 @@ void Game::start(){
         //input
         
         //physics
-        if(physicsCount >= physicsRate){
-            physicsSystem.update(physicsCount); 
-            physicsCount = 0;
-        }
+        physicsSystem.update(delta); 
 
         //entities update
         
@@ -84,5 +75,45 @@ void Game::start(){
         }
         
     }
+
+}
+
+void Game::test_collision(){
+
+    //physics test
+    
+    float qw = _screenWidth/4;
+    float qh = _screenHeight/4;
+
+    //normal
+    factory.createEnemy(vec2(qw,qh *4), vec4(1,1,1, 1));
+    factory.createWall(vec2(qw,qh*3), vec2(100, 10));
+
+    //upside down
+    factory.createEnemy(vec2(qw,qh*2), vec4(1,1,1, 1));
+    factory.createWall(vec2(qw,qh), vec2(100, 10),glm::pi<float>());
+
+    //cross
+    factory.createEnemy(vec2(qw*2,qh*4), vec4(1,1,1, 1));
+    factory.createWall(vec2(qw*2,qh*3), vec2(100, 10),3.14/4);
+    factory.createWall(vec2(qw*2,qh*3), vec2(100, 10),-3.14/4);
+
+    //upside down cross
+    factory.createEnemy(vec2(qw*2,qh*2), vec4(1,1,1, 1));
+    factory.createWall(vec2(qw*2,qh), vec2(100, 10),-3.14 + 3.14/4);
+    factory.createWall(vec2(qw*2,qh), vec2(100, 10),-3.14 + -3.14/4);
+
+    //tilt positive
+    factory.createEnemy(vec2(qw*3,qh*4), vec4(1,1,1, 1));
+    factory.createWall(vec2(qw*3,qh*3), vec2(50, 10),3.14/4);
+
+    //tilt negative
+    factory.createWall(vec2(qw*3,qh*2), vec2(50, 10),3.14/4);
+
+
+
+    //high speed
+    factory.createEnemy(vec2(10,qh*4), vec4(1,1,1, 1));
+    factory.createWall(vec2(_screenWidth,10), vec2(_screenWidth, 10),0);
 
 }

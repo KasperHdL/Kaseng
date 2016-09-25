@@ -27,4 +27,8 @@ class Game{
         int _screenHeight;
 
         bool _gameRunning;
+
+
+        //tests
+        void test_collision();
 };

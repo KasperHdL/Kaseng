@@ -27,7 +27,7 @@ class PhysicsSystem{
         Edge getEdgeFromBox(mat4 worldTransform, int index);
         Quad getBoxVerticesInWorld(mat4 worldTransform);
 
-        float getDistanceBetweenQuadOnAxis(vec2 ax, Quad a, Quad b);
+        float getDistanceOnProjectedAxis(vec2 ax, vec2 a[], int a_length, vec2 b[], int b_length);
 
 
 };

@@ -38,8 +38,8 @@ struct DynamicBody{
     vec2 acceleration;
     float rotationAcceleration;
 
-    DynamicBody(Transform* transform,Shape shape = Shape::Box, float mass = 1, float friction = 0.9)
-        :transform(transform), shape(shape), mass(mass), friction(friction)
+    DynamicBody(Transform* transform,Shape shape = Shape::Box, float mass = 1, float friction = 0.95)
+        :transform(transform), shape(shape), mass(mass), friction(friction), acceleration(vec2(0)), velocity(vec2(0)), rotationAcceleration(0), rotationVelocity(0)
     {};
 };
 
@@ -49,7 +49,7 @@ struct StaticBody{
 
     float friction;
 
-    StaticBody(Transform* transform, Shape shape = Shape::Box, float friction = 0.9)
+    StaticBody(Transform* transform, Shape shape = Shape::Box, float friction = 0.95)
         :transform(transform), shape(shape), friction(friction)
     {};
 
@@ -67,7 +67,7 @@ struct RenderEntity{
 
 
 struct Quad{
-    vec2 a,b,c,d;
+    vec2 v[4];
 };
 
 struct Edge{
