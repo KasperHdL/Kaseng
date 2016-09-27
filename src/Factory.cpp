@@ -16,6 +16,9 @@ void Factory::createPlayer(vec2 position){
 
     pools->dynamicBodies.push_back(DynamicBody(transform, Shape::Circle));
     pools->renderEntities.push_back(RenderEntity(transform, Shape::Circle, vec4(0, 0.75, 0.65, 1)));
+
+    pools->players.push_back(Player(SDL_SCANCODE_LEFT, SDL_SCANCODE_RIGHT, SDL_SCANCODE_SPACE));
+
 }
 
 void Factory::createEnemy(vec2 position, vec4 color){

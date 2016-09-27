@@ -4,6 +4,8 @@
 #include "SRE/Mesh.hpp"
 #include "SRE/Texture.hpp"
 #include "SRE/Shader.hpp"
+#include <map>
+#include "SDL_keyboard.h"
 
 
 using namespace glm;
@@ -13,7 +15,6 @@ enum Shape{
     Box,
     Circle
 };
-
 
 struct Transform{
     vec2 position;
@@ -25,6 +26,7 @@ struct Transform{
     {};
 };
 
+//Physics Bodies
 struct DynamicBody{
     Transform* transform;
     Shape shape;
@@ -65,13 +67,18 @@ struct RenderEntity{
     {};
 };
 
+struct Player{
+    bool left = false, right = false, jump = false;
+    SDL_Scancode left_scancode,
+                 right_scancode,
+                 jump_scancode;
+
+    Player(SDL_Scancode left, SDL_Scancode right, SDL_Scancode jump)
+        :left_scancode(left), right_scancode(right), jump_scancode(jump)
+    {};
+};
 
 struct Quad{
     vec2 v[4];
 };
 
-struct Edge{
-    vec2 from;
-    vec2 to;
-    vec2 normal;
-};

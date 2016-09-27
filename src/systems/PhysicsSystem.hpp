@@ -24,7 +24,6 @@ class PhysicsSystem{
         Pools* pools;
         vec2 gravity;
 
-        Edge getEdgeFromBox(mat4 worldTransform, int index);
         Quad getBoxVerticesInWorld(mat4 worldTransform);
 
         float getDistanceOnProjectedAxis(vec2 ax, vec2 a[], int a_length, vec2 b[], int b_length);

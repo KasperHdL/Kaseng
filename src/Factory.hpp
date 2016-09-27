@@ -7,6 +7,8 @@
 #include "SRE/Mesh.hpp"
 #include "SRE/Shader.hpp"
 
+#include "SDL_keycode.h"
+
 using namespace glm;
 
 class Factory{

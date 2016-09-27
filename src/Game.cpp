@@ -20,7 +20,8 @@ void Game::init(){
     physicsSystem.start(&pools, vec2(0,-0.1));
     renderSystem.start(&pools, vec4(0.15,0.1,0.05,1));
 
-/*
+    factory.createPlayer(vec2(_screenWidth-20,200));
+    /*
     for(int i = 0; i < 20;i ++){
         float r = ((float)i / 20);
         factory.createEnemy(vec2(r * _screenWidth, 200), vec4(r, r, r, 1));
