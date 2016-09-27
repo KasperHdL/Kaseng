@@ -28,7 +28,7 @@ void PhysicsSystem::update(float delta){
             
             if(overlap != vec2(0)){
                 vec2 perp = glm::cross(vec3(normalize(overlap),0),vec3(0,0,1));
-                
+
                 e.transform->position += overlap;
                 e.velocity = perp * dot(perp, e.velocity) * e.friction;
                 e.acceleration = perp * dot(perp, e.acceleration) * e.friction;
@@ -53,36 +53,39 @@ vec2 PhysicsSystem::getOverlap(DynamicBody d, StaticBody s){
         vec2 ax4 = normalize(b.v[2] - b.v[1]);
 
         float d1 = getDistanceOnProjectedAxis(ax1, a.v, 4, b.v, 4);
+        if(d1 > 0)return vec2(0);
         float d2 = getDistanceOnProjectedAxis(ax2, a.v, 4, b.v, 4);
+        if(d2 > 0) return vec2(0);
         float d3 = -9999;
         float d4 = -9999;
 
         if(ax3 != ax1 && ax3 != ax2)
             d3 = getDistanceOnProjectedAxis(ax3, a.v, 4, b.v, 4);
+
+        if(d3 > 0) return vec2(0);
         if(ax4 != ax1 && ax4 != ax2)
             d4 = getDistanceOnProjectedAxis(ax4, a.v, 4, b.v, 4);
+        if(d4 > 0) return vec2(0);
 
-        if(d1 < 0 && d2 < 0 && d3 < 0 && d4 < 0){
-            //collision
+        //collision
 
-            vec2 delta = normalize(d.transform->position - s.transform->position);
+        vec2 delta = normalize(d.transform->position - s.transform->position);
 
-            d1 = -d1;
-            d2 = -d2;
-            d3 = -d3;
-            d4 = -d4;
+        d1 = -d1;
+        d2 = -d2;
+        d3 = -d3;
+        d4 = -d4;
 
-            //return the smallest overlap (dot(delta, ax?) is used to ensure the offset will be in the right direction)
-            if(d1 < d2 && d1 < d3 && d1 < d4)
-                return dot(delta, ax1) * ax1 * d1;
-            else if(d2 < d1 && d2 < d3 && d2 < d4)
-                return dot(delta, ax2) * ax2 * d2;
-            else if(d3 < d1 && d3 < d2 && d3 < d4)
-                return dot(delta, ax3) * ax3 * d3;
-            else
-                return dot(delta, ax4) * ax4 * d4;
+        //return the smallest overlap (dot(delta, ax?) is used to ensure the offset will be in the right direction)
+        if(d1 < d2 && d1 < d3 && d1 < d4)
+            return glm::sign(dot(delta, ax1)) * ax1 * d1;
+        else if(d2 < d1 && d2 < d3 && d2 < d4)
+            return glm::sign(dot(delta, ax2)) * ax2 * d2;
+        else if(d3 < d1 && d3 < d2 && d3 < d4)
+            return glm::sign(dot(delta, ax3)) * ax3 * d3;
+        else
+            return glm::sign(dot(delta, ax4)) * ax4 * d4;
 
-        }
     }else if(d.shape == Shape::Circle){
         Quad a = getBoxVerticesInWorld(Utility::getTransform(s.transform));
         vec2 circlePos = d.transform->position;
