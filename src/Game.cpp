@@ -19,6 +19,8 @@ void Game::init(){
     factory.start(&pools);
     physicsSystem.start(&pools, vec2(0,-0.1));
     renderSystem.start(&pools, vec4(0.15,0.1,0.05,1));
+    inputSystem.start(&pools);
+    playerSystem.start(&pools);
 
     factory.createPlayer(vec2(_screenWidth-20,200));
     /*
@@ -49,9 +51,9 @@ void Game::start(){
 
         renderCount += delta;
 
-        //debug quit
         SDL_Event event;
         while(SDL_PollEvent(&event)){
+            //debug quit
             switch(event.type){
                 case SDL_KEYDOWN:
                     switch(event.key.keysym.sym){
@@ -61,9 +63,11 @@ void Game::start(){
                     }
                 break;
             }
+            //input
+            inputSystem.update(&event);
         }
 
-        //input
+        playerSystem.update();
         
         //physics
         physicsSystem.update(delta); 

@@ -69,12 +69,16 @@ struct RenderEntity{
 
 struct Player{
     bool left = false, right = false, jump = false;
-    SDL_Scancode left_scancode,
-                 right_scancode,
-                 jump_scancode;
+    SDL_Keycode left_keycode,
+                right_keycode,
+                jump_keycode;
 
-    Player(SDL_Scancode left, SDL_Scancode right, SDL_Scancode jump)
-        :left_scancode(left), right_scancode(right), jump_scancode(jump)
+    float runForce = 0.2f, jumpForce = 0.5f;
+
+    DynamicBody* body;
+
+    Player(SDL_Keycode left, SDL_Keycode right, SDL_Keycode jump, DynamicBody* body)
+        :left_keycode(left), right_keycode(right), jump_keycode(jump), body(body)
     {};
 };
 

@@ -8,6 +8,8 @@
 
 #include "systems/PhysicsSystem.hpp"
 #include "systems/RenderSystem.hpp"
+#include "systems/InputSystem.hpp"
+#include "systems/PlayerSystem.hpp"
 
 class Game{
     public:
@@ -20,6 +22,8 @@ class Game{
         Pools pools;
         RenderSystem renderSystem;
         PhysicsSystem physicsSystem;
+        InputSystem inputSystem;
+        PlayerSystem playerSystem;
         Factory factory;
 
     private:
