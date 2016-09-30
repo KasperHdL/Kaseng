@@ -17,6 +17,7 @@ void PhysicsSystem::update(float delta){
 
     for(auto& e : pools->dynamicBodies){
         e.acceleration += gravity;
+        e.acceleration *= e.friction;
         e.velocity += e.acceleration;
         e.transform->position += e.velocity * delta;
 
@@ -30,7 +31,7 @@ void PhysicsSystem::update(float delta){
                 vec2 perp = glm::cross(vec3(normalize(overlap),0),vec3(0,0,1));
 
                 e.transform->position += overlap;
-                e.velocity = perp * dot(perp, e.velocity) * e.friction;
+                e.velocity = perp * dot(perp, e.velocity) * s.friction;
                 e.acceleration = perp * dot(perp, e.acceleration) * e.friction;
 
             }
@@ -54,8 +55,10 @@ vec2 PhysicsSystem::getOverlap(DynamicBody d, StaticBody s){
 
         float d1 = getDistanceOnProjectedAxis(ax1, a.v, 4, b.v, 4);
         if(d1 > 0)return vec2(0);
+
         float d2 = getDistanceOnProjectedAxis(ax2, a.v, 4, b.v, 4);
         if(d2 > 0) return vec2(0);
+
         float d3 = -9999;
         float d4 = -9999;
 
@@ -92,6 +95,8 @@ vec2 PhysicsSystem::getOverlap(DynamicBody d, StaticBody s){
 
         vec2 ax1 = normalize(a.v[1] - a.v[0]);
         vec2 ax2 = normalize(a.v[2] - a.v[1]);
+        vec2 ax3 = glm::rotate(ax1, 45.0f);
+        vec2 ax4 = glm::rotate(ax2, 45.0f);
   
         vec2 cPoints1[] =
         {
@@ -105,21 +110,44 @@ vec2 PhysicsSystem::getOverlap(DynamicBody d, StaticBody s){
             circlePos - ax2 * d.transform->scale.x
         };
 
+        vec2 cPoints3[] =
+        {
+            circlePos + ax3 * d.transform->scale.x,
+            circlePos - ax3 * d.transform->scale.x
+        };
+
+        vec2 cPoints4[] =
+        {
+            circlePos + ax4 * d.transform->scale.x,
+            circlePos - ax4 * d.transform->scale.x
+        };
+
+
         float d1 = getDistanceOnProjectedAxis(ax1, a.v, 4, cPoints1, 2);
+        if(d1 > 0)return vec2(0);
         float d2 = getDistanceOnProjectedAxis(ax2, a.v, 4, cPoints2, 2);
- 
-        if(d1 < 0 && d2 < 0){
+        if(d2 > 0)return vec2(0);
+        float d3 = getDistanceOnProjectedAxis(ax3, a.v, 4, cPoints3, 2);
+        if(d3 > 0)return vec2(0);
+        float d4 = getDistanceOnProjectedAxis(ax4, a.v, 4, cPoints4, 2);
+        if(d4 > 0)return vec2(0);
 
-            vec2 delta = normalize(d.transform->position - s.transform->position);
-            
-            d1 = -d1;
-            d2 = -d2;
+        vec2 delta = normalize(d.transform->position - s.transform->position);
 
-            if(d1 < d2)
-                return dot(delta, ax1) * ax1 * d1;
-            else
-                return dot(delta, ax2) * ax2 * d2;
-        }
+        d1 = -d1;
+        d2 = -d2;
+        d3 = -d3;
+        d4 = -d4;
+
+        //return the smallest overlap (dot(delta, ax?) is used to ensure the offset will be in the right direction)
+        if(d1 < d2 && d1 < d3 && d1 < d4)
+            return dot(delta, ax1) * ax1 * d1;
+        else if(d2 < d1 && d2 < d3 && d2 < d4)
+            return dot(delta, ax2) * ax2 * d2;
+        else if(d3 < d1 && d3 < d2 && d3 < d4)
+            return dot(delta, ax3) * ax3 * d3;
+        else
+            return dot(delta, ax4) * ax4 * d4;
 
     }
 

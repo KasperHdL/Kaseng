@@ -5,6 +5,7 @@
 #include "../Utility.hpp"
 
 #include "glm/glm.hpp"
+#include "glm/gtx/rotate_vector.hpp"
 
 using namespace glm;
 
